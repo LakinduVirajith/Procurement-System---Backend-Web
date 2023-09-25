@@ -1,8 +1,8 @@
 package com.procurement.system.construction.industry.config;
 
+import com.procurement.system.construction.industry.config.jwt.JwtAuthenticationFilter;
 import com.procurement.system.construction.industry.enums.Permission;
 import com.procurement.system.construction.industry.enums.UserRole;
-import com.procurement.system.construction.industry.config.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +22,9 @@ public class WebSecurityConfig {
 
     private static final String[] WHITELIST = {
             "/",
+            "/api/v1/user/login",
+            "/api/v1/user/refresh-token",
+            "/api/v1/user/logout",
 
             "/v2/api-docs",
             "/v3/api-docs",
