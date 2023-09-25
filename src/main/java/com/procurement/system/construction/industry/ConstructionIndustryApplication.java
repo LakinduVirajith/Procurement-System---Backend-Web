@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @RestController
-@Tag(name = "test controller")
+@Tag(name = "Test Controller")
 public class ConstructionIndustryApplication {
 
 	@Value("${server.port}")

@@ -4,6 +4,7 @@ import com.procurement.system.construction.industry.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,6 +36,7 @@ public class User implements UserDetails {
     private String email;
 
     @NotNull
+    @Size(min = 7, max = 15)
     private String mobileNumber;
 
     @NotNull
