@@ -1,0 +1,67 @@
+#PORT
+server:
+  port: 8080
+
+#BASE URL
+base:
+  url: http://localhost:8080
+
+#JWT
+application:
+  security:
+    jwt:
+      secret-key: "YOUR SECRET KEY"
+      expiration: 7200000 #TWO HOURS
+      refresh-token:
+        expiration: 2419200000 #ONE MONTH
+
+#ACTIVE PROFILE
+spring:
+  profiles:
+    active: dev
+  jpa:
+    open-in-view: false
+
+---
+#DEV PROFILE
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    url: jdbc:mysql://localhost:3306/procurement-system
+    password: "YOUR SQL PASSWORD"
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+---
+#QA PROFILE
+spring:
+  config:
+    activate:
+      on-profile: qa
+  datasource:
+    url: jdbc:mysql://localhost:3306/qa_db
+    username: root
+    password: "YOUR SQL PASSWORD"
+    driver-class-name: com.mysql.jdbc.Driver
+  jpa:
+    show-sql: true
+
+---
+#PROD PROFILE
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://localhost:3306/prod_db
+    username: root
+    password: "YOUR SQL PASSWORD"
+    driver-class-name: com.mysql.jdbc.Driver
+  jpa:
+    show-sql: true
