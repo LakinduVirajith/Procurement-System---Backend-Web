@@ -21,6 +21,7 @@ public class UserController {
 
     private final UserService userService;
 
+    // ADMIN ACCESS
     @Operation(summary = "User Registration", description = "Register a new user. Providing necessary details to create a user account.")
     @PostMapping("admin/register")
     public ResponseEntity<ResponseMessage> register(@Valid @RequestBody UserDTO userDTO) throws ConflictException {
@@ -39,6 +40,13 @@ public class UserController {
         return userService.deactivate(userId);
     }
 
+    @Operation(summary = "Reset Password", description = "Initiate password reset by Providing necessary details.")
+    @PostMapping("admin/reset-password")
+    public ResponseEntity<ResponseMessage> restPassword(String email, String password) throws NotFoundException {
+        return userService.restPassword(email, password);
+    }
+
+    // GLOBAL ACCESS
     @Operation(summary = "User Authentication", description = "Authenticate a user by providing valid credentials.")
     @PostMapping("user/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) throws ForbiddenException, NotFoundException {
@@ -51,15 +59,10 @@ public class UserController {
         return userService.refreshToken(refreshToken);
     }
 
+    // ALL USER ACCESS
     @Operation(summary = "Logout", description = "Invalidate the user's authentication token to log out.")
-    @PutMapping("user/logout")
+    @PutMapping("all-users/logout")
     public ResponseEntity<ResponseMessage> logout() throws NotFoundException, BadRequestException {
         return userService.logout();
-    }
-
-    @Operation(summary = "Reset Password", description = "Initiate password reset by Providing necessary details.")
-    @PostMapping("admin/reset-password")
-    public ResponseEntity<ResponseMessage> restPassword(String email, String password) throws NotFoundException {
-        return userService.restPassword(email, password);
     }
 }

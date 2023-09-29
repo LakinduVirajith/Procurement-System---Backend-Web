@@ -18,7 +18,7 @@ public interface SiteService {
 
     ResponseEntity<ResponseMessage> updateSite(SiteDTO siteDTO) throws BadRequestException, NotFoundException;
 
-    ResponseEntity<ResponseMessage> deleteSite(Long siteId, boolean deleteAllOption) throws NotFoundException;
+    ResponseEntity<ResponseMessage> deleteSite(Long siteId, Boolean deleteAllOption) throws NotFoundException;
 
     ResponseEntity<ResponseMessage> assignSite(Long siteId, String userEmail) throws NotFoundException;
 

@@ -3,7 +3,6 @@ package com.procurement.system.construction.industry.service;
 import com.procurement.system.construction.industry.common.CommonFunctions;
 import com.procurement.system.construction.industry.common.ResponseMessage;
 import com.procurement.system.construction.industry.dto.ItemDTO;
-import com.procurement.system.construction.industry.dto.UserDTO;
 import com.procurement.system.construction.industry.entity.Item;
 import com.procurement.system.construction.industry.exception.ConflictException;
 import com.procurement.system.construction.industry.exception.NotFoundException;

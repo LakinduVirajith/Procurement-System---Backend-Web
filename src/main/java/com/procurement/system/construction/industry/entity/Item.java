@@ -1,16 +1,13 @@
 package com.procurement.system.construction.industry.entity;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.validation.constraints.Email;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Email
+@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -42,4 +39,6 @@ public class Item {
 
     private String color;
 
+    @OneToOne(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    private OrderItem orderItems;
 }

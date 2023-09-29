@@ -15,11 +15,11 @@ public interface UserService {
 
     ResponseEntity<ResponseMessage> deactivate(Long userId) throws NotFoundException, ConflictException;
 
+    ResponseEntity<ResponseMessage> restPassword(String email, String password) throws NotFoundException;
+
     ResponseEntity<AuthenticationResponse> authenticate(AuthenticationRequest request) throws NotFoundException, ForbiddenException;
 
     ResponseEntity<AuthenticationResponse> refreshToken(String refreshToken) throws BadRequestException, NotFoundException, InternalServerException;
 
     ResponseEntity<ResponseMessage> logout() throws NotFoundException, BadRequestException;
-
-    ResponseEntity<ResponseMessage> restPassword(String email, String password) throws NotFoundException;
 }

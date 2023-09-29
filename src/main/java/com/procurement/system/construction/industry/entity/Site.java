@@ -37,6 +37,9 @@ public class Site {
     @OneToMany(mappedBy = "site", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<User> users;
 
+    @OneToMany(mappedBy = "site", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderDetails> orders;
+
     @OneToOne
     @JoinColumn(name = "site_manager_id")
     private User siteManager;

@@ -127,7 +127,7 @@ public class SiteServiceImpl implements SiteService{
     }
 
     @Override
-    public ResponseEntity<ResponseMessage> deleteSite(Long siteId, boolean deleteAllOption) throws NotFoundException {
+    public ResponseEntity<ResponseMessage> deleteSite(Long siteId, Boolean deleteAllOption) throws NotFoundException {
         Optional<Site> siteOptional = siteRepository.findById(siteId);
         if(siteOptional.isEmpty()){
             throw new NotFoundException("Couldn't find any site with the provided ID");
