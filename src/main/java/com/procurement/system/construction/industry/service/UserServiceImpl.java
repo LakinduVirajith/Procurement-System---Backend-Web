@@ -92,6 +92,24 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    public ResponseEntity<ResponseMessage> restPassword(String email, String password) throws NotFoundException {
+        Optional<User> userCondition = userRepository.findByEmail(email);
+
+        // INVALID USER EXCEPTION
+        if(userCondition.isEmpty()){
+            throw new NotFoundException("Oops! We couldn't find any user with the email address you provided");
+        }
+        User user = userCondition.get();
+
+        // ENCODE PASSWORD USING PASSWORD-ENCODER
+        String encodedPassword = encodePassword(password);
+        user.setPassword(encodedPassword);
+        userRepository.save(user);
+
+        return commonFunctions.successResponse("Password reset successfully");
+    }
+
+    @Override
     public ResponseEntity<AuthenticationResponse> authenticate(AuthenticationRequest request) throws NotFoundException, ForbiddenException {
         Optional<User> userCondition = userRepository.findByEmail(request.getEmail());
 
@@ -181,24 +199,6 @@ public class UserServiceImpl implements UserService{
         }
 
         return commonFunctions.successResponse("User logout successfully");
-    }
-
-    @Override
-    public ResponseEntity<ResponseMessage> restPassword(String email, String password) throws NotFoundException {
-        Optional<User> userCondition = userRepository.findByEmail(email);
-
-        // INVALID USER EXCEPTION
-        if(userCondition.isEmpty()){
-            throw new NotFoundException("Oops! We couldn't find any user with the email address you provided");
-        }
-        User user = userCondition.get();
-
-        // ENCODE PASSWORD USING PASSWORD-ENCODER
-        String encodedPassword = encodePassword(password);
-        user.setPassword(encodedPassword);
-        userRepository.save(user);
-
-        return commonFunctions.successResponse("Password reset successfully");
     }
 
     private void saveToken(User user, String jwtToken) {
