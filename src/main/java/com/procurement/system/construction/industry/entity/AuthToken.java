@@ -25,7 +25,7 @@ public class AuthToken {
 
     private boolean revoked = false;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     @JoinColumn(name = "au_user_id")
     private User user;
 }
