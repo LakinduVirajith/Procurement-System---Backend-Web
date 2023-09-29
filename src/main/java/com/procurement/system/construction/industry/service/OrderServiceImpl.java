@@ -39,7 +39,7 @@ public class OrderServiceImpl implements OrderService{
             throw new NotFoundException("You are not currently assigned to any site.");
         }
 
-        List<Order> orders = orderRepository.findBySiteSiteId(siteId);
+        List<OrderDetails> orders = orderRepository.findBySiteSiteId(siteId);
         if(orders.isEmpty()){
             throw new NotFoundException("Haven't found any orders for this site yet.");
         }
@@ -78,7 +78,7 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     public OrderDTO getOrderDetails(Long orderId) throws NotFoundException {
-        Order order = orderRepository.findById(orderId)
+        OrderDetails order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Couldn't find any orders with the given ID"));
 
         OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
@@ -86,7 +86,7 @@ public class OrderServiceImpl implements OrderService{
         return orderDTO;
     }
 
-    private void GetOrderItemsData(Order order, OrderDTO orderDTO) {
+    private void GetOrderItemsData(OrderDetails order, OrderDTO orderDTO) {
         orderDTO.setSupplierId(order.getSupplier().getUserId());
         orderDTO.setSiteId(order.getSite().getSiteId());
 
@@ -112,7 +112,7 @@ public class OrderServiceImpl implements OrderService{
     @Override
     @Transactional
     public ResponseEntity<ResponseMessage> addOrder(OrderDTO orderDTO) throws NotFoundException {
-        Order order = modelMapper.map(orderDTO, Order.class);
+        OrderDetails order = modelMapper.map(orderDTO, OrderDetails.class);
         order.setOrderId(null);
         order.setStatus(Status.Pending);
         order.setSupplier(null);
@@ -122,7 +122,7 @@ public class OrderServiceImpl implements OrderService{
             throw new NotFoundException("You are not currently assigned to any site.");
         }
         order.setSite(site);
-        Order executedOrder = orderRepository.save(order);
+        OrderDetails executedOrder = orderRepository.save(order);
 
         // SET ORDER ITEMS
         List<OrderItemDTO> orderItemDTOS = orderDTO.getItems();
@@ -143,7 +143,7 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     public ResponseEntity<ResponseMessage> addOrderItem(OrderItemDTO orderItemDTO) throws NotFoundException {
-        Order order = orderRepository.findById(orderItemDTO.getOrderId())
+        OrderDetails order = orderRepository.findById(orderItemDTO.getOrderId())
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
 
         Item item = itemRepository.findById(orderItemDTO.getItemId())
@@ -173,7 +173,7 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     public ResponseEntity<ResponseMessage> setAsComplete(Long orderId) throws NotFoundException {
-        Order order = orderRepository.findById(orderId)
+        OrderDetails order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
 
         order.setStatus(Status.Complete);
@@ -203,7 +203,7 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     public ResponseEntity<ResponseMessage> assignSupplier(Long orderId, Long supplierId) throws NotFoundException {
-        Order order = orderRepository.findById(orderId)
+        OrderDetails order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
 
         User user = userRepository.findById(supplierId)
@@ -216,7 +216,7 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     public ResponseEntity<ResponseMessage> setAsApproved(Long orderId) throws NotFoundException {
-        Order order = orderRepository.findById(orderId)
+        OrderDetails order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
 
         order.setStatus(Status.Approval);
@@ -226,7 +226,7 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     public ResponseEntity<ResponseMessage> setAsCanceled(Long orderId) throws NotFoundException {
-        Order order = orderRepository.findById(orderId)
+        OrderDetails order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
 
         order.setStatus(Status.Cancel);
@@ -236,7 +236,7 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     public ResponseEntity<ResponseMessage> setAsDelivered(Long orderId) throws NotFoundException {
-        Order order = orderRepository.findById(orderId)
+        OrderDetails order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
 
         order.setStatus(Status.Delivered);

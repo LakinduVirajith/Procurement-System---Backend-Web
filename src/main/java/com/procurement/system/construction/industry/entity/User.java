@@ -56,14 +56,14 @@ public class User implements UserDetails {
     @JoinColumn(name = "u_site_id")
     private Site site;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "siteManager", cascade = CascadeType.ALL, orphanRemoval = true)
     private Site siteManager;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "procurementManager", cascade = CascadeType.ALL, orphanRemoval = true)
     private Site procurementManager;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Order order;
+    @OneToOne(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
+    private OrderDetails order;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

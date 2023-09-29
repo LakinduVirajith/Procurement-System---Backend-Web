@@ -1,6 +1,5 @@
 package com.procurement.system.construction.industry.dto;
 
-import com.procurement.system.construction.industry.entity.Site;
 import com.procurement.system.construction.industry.enums.Status;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
