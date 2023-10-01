@@ -22,26 +22,26 @@ public class UserController {
     private final UserService userService;
 
     // ADMIN ACCESS
-    @Operation(summary = "User Registration", description = "Register a new user. Providing necessary details to create a user account.")
-    @PostMapping("admin/register")
-    public ResponseEntity<ResponseMessage> register(@Valid @RequestBody UserDTO userDTO) throws ConflictException {
-        return userService.register(userDTO);
+    @Operation(summary = "User assign to the system", description = "Assign a new user. Providing necessary details to create a user account.")
+    @PostMapping("super-admin/register")
+    public ResponseEntity<ResponseMessage> addUser(@Valid @RequestBody UserDTO userDTO) throws ConflictException {
+        return userService.addUser(userDTO);
     }
 
     @Operation(summary = "Activate User Account", description = "Activate a user account using an userId")
-    @GetMapping("admin/activate/{id}")
+    @GetMapping("super-admin/activate/{id}")
     public ResponseEntity<ResponseMessage> userActivate(@PathVariable("id") Long userId) throws ConflictException, NotFoundException {
         return userService.activate(userId);
     }
 
     @Operation(summary = "Deactivate Account", description = "Deactivate a user account using an userId")
-    @PutMapping("admin/deactivate/{id}")
+    @PutMapping("super-admin/deactivate/{id}")
     public ResponseEntity<ResponseMessage> userDeactivate(@PathVariable("id") Long userId) throws ConflictException, NotFoundException {
         return userService.deactivate(userId);
     }
 
     @Operation(summary = "Reset Password", description = "Initiate password reset by Providing necessary details.")
-    @PostMapping("admin/reset-password")
+    @PostMapping("super-admin/reset-password")
     public ResponseEntity<ResponseMessage> restPassword(String email, String password) throws NotFoundException {
         return userService.restPassword(email, password);
     }

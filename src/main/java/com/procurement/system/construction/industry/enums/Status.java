@@ -4,13 +4,13 @@ public enum Status {
 
     Pending,
 
-    Approval,
+    Approved,
 
     Delivered,
 
-    Cancel,
+    Cancelled,
 
-    Complete,
+    Completed,
 
-    Return
+    Returned
 }

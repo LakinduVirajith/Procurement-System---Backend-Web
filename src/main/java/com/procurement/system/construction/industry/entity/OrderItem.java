@@ -20,14 +20,17 @@ public class OrderItem {
     private Long orderItemId;
 
     @NotNull
+    private int quantity;
+
+    @NotNull
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "oi_item_id")
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "item_id_ref")
     private Item item;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "oi_order_id")
+    @JoinColumn(name = "order_id_ref")
     private OrderDetails order;
 }

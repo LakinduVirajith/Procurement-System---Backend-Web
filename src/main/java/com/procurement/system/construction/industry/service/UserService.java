@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface UserService {
 
-    ResponseEntity<ResponseMessage> register(UserDTO userDTO) throws ConflictException;
+    ResponseEntity<ResponseMessage> addUser(UserDTO userDTO) throws ConflictException;
 
     ResponseEntity<ResponseMessage> activate(Long userId) throws NotFoundException, ConflictException;
 

@@ -26,6 +26,6 @@ public class AuthToken {
     private boolean revoked = false;
 
     @OneToOne
-    @JoinColumn(name = "au_user_id")
+    @JoinColumn(name = "user_id_ref")
     private User user;
 }

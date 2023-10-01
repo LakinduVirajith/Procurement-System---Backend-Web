@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -27,9 +29,6 @@ public class Item {
     private String manufacturer;
 
     @NotNull
-    private Integer quantityAvailable;
-
-    @NotNull
     private Double price;
 
     @NotNull
@@ -39,6 +38,6 @@ public class Item {
 
     private String color;
 
-    @OneToOne(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
-    private OrderItem orderItems;
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items;
 }

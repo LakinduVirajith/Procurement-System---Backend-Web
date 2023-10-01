@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService{
     private final ModelMapper modelMapper;
 
     @Override
-    public ResponseEntity<ResponseMessage> register(UserDTO userDTO) throws ConflictException {
+    public ResponseEntity<ResponseMessage> addUser(UserDTO userDTO) throws ConflictException {
         Optional<User> emailCondition = userRepository.findByEmail(userDTO.getEmail());
 
         // EMAIL CONFLICT EXCEPTION

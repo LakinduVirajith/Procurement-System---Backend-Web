@@ -1,6 +1,8 @@
 package com.procurement.system.construction.industry.dto;
 
 import com.procurement.system.construction.industry.enums.UserRole;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +31,7 @@ public class UserDTO {
     private String password;
 
     @NotNull
+    @Enumerated(EnumType.STRING)
     private UserRole role;
 
     @Builder.Default
