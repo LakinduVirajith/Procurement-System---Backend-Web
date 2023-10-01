@@ -4,6 +4,7 @@ import com.procurement.system.construction.industry.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Data
@@ -35,13 +37,14 @@ public class User implements UserDetails {
     private String email;
 
     @NotNull
+    @Size(min = 7, max = 15)
     private String mobileNumber;
 
     @NotNull
     private String password;
 
-    @Enumerated(EnumType.STRING)
     @NotNull
+    @Enumerated(EnumType.STRING)
     private UserRole role;
 
     @NotNull
@@ -49,6 +52,19 @@ public class User implements UserDetails {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private AuthToken authToken;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "site_id_ref")
+    private Site site;
+
+    @OneToOne(mappedBy = "siteManager", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Site siteManager;
+
+    @OneToOne(mappedBy = "procurementManager", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Site procurementManager;
+
+    @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderDetails> order;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

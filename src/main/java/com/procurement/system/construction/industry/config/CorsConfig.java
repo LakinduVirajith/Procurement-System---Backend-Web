@@ -12,10 +12,11 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.addAllowedOriginPattern("*"); // Use allowedOriginPatterns instead of allowedOrigins
-        corsConfiguration.addAllowedMethod("*"); // Allow all HTTP methods
-        corsConfiguration.addAllowedHeader("*"); // Allow all headers
-        corsConfiguration.setAllowCredentials(true); // Allow credentials (e.g., cookies)
+        corsConfiguration.addAllowedOriginPattern("http://localhost:3000/");
+        corsConfiguration.addAllowedOriginPattern("https://localhost:8000/");
+        corsConfiguration.addAllowedMethod("*");
+        corsConfiguration.addAllowedHeader("Authorization");
+        corsConfiguration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);

@@ -11,20 +11,21 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public enum UserRole {
 
-    PROCUREMENT_MANAGER(
-            Set.of(
-                    Permission.PROCUREMENT_MANAGER_READ,
-                    Permission.PROCUREMENT_MANAGER_UPDATE,
-                    Permission.PROCUREMENT_MANAGER_CREATE,
-                    Permission.PROCUREMENT_MANAGER_DELETE
-            )
-    ),
     SITE_MANAGER(
             Set.of(
                     Permission.SITE_MANAGER_READ,
                     Permission.SITE_MANAGER_UPDATE,
                     Permission.SITE_MANAGER_CREATE,
                     Permission.SITE_MANAGER_DELETE
+            )
+    ),
+
+    PROCUREMENT_MANAGER(
+            Set.of(
+                    Permission.PROCUREMENT_MANAGER_READ,
+                    Permission.PROCUREMENT_MANAGER_UPDATE,
+                    Permission.PROCUREMENT_MANAGER_CREATE,
+                    Permission.PROCUREMENT_MANAGER_DELETE
             )
     ),
 
