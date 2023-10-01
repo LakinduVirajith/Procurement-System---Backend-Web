@@ -2,19 +2,23 @@ package com.procurement.system.construction.industry.service;
 
 import com.procurement.system.construction.industry.common.CommonFunctions;
 import com.procurement.system.construction.industry.common.ResponseMessage;
-import com.procurement.system.construction.industry.dto.OrderDTO;
+import com.procurement.system.construction.industry.dto.OrderDetailsDTO;
 import com.procurement.system.construction.industry.dto.OrderItemDTO;
 import com.procurement.system.construction.industry.dto.SiteDTO;
 import com.procurement.system.construction.industry.entity.*;
 import com.procurement.system.construction.industry.enums.Status;
+import com.procurement.system.construction.industry.enums.UserRole;
+import com.procurement.system.construction.industry.exception.BadRequestException;
 import com.procurement.system.construction.industry.exception.NotFoundException;
 import com.procurement.system.construction.industry.repository.*;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,92 +34,81 @@ public class OrderServiceImpl implements OrderService{
     private final SiteRepository siteRepository;
     private final CommonFunctions commonFunctions;
     private final ModelMapper modelMapper;
+    private final EntityManager entityManager;
 
     @Override
-    public List<OrderDTO> getAllOrderDetails() throws NotFoundException {
+    @Transactional
+    public List<OrderDetailsDTO> getAllOrderDetails() throws NotFoundException {
         User user = commonFunctions.getUser();
         Long siteId = user.getSite().getSiteId();
-        if(siteId == null){
+        if (siteId == null) {
             throw new NotFoundException("You are not currently assigned to any site.");
         }
 
         List<OrderDetails> orders = orderRepository.findBySiteSiteId(siteId);
-        if(orders.isEmpty()){
+        if (orders.isEmpty()) {
             throw new NotFoundException("Haven't found any orders for this site yet.");
         }
 
-        // SET ORDER DETAILS
-        List<OrderDTO> orderDTOS = orders.stream().map(order -> {
+        return orders.stream()
+                .map(order -> mapOrderToDTO(order, user.getRole()))
+                .collect(Collectors.toList());
+    }
 
-            OrderDTO orderDTO = new OrderDTO();
-            switch (user.getRole().name()) {
-                case "PROCUREMENT_MANAGER" -> {
-                    if (order.getStatus().name().equals("Pending") || order.getStatus().name().equals("Cancel")) {
-                        orderDTO = modelMapper.map(order, OrderDTO.class);
-                        orderDTO.setSupplierId(order.getSupplier().getUserId());
-                        orderDTO.setSiteId(order.getSite().getSiteId());
-                    }
-                }
-                case "SUPPLIER" -> {
-                    if (order.getStatus().name().equals("Approval") || order.getStatus().name().equals("Return")) {
-                        orderDTO = modelMapper.map(order, OrderDTO.class);
-                        orderDTO.setSupplierId(order.getSupplier().getUserId());
-                        orderDTO.setSiteId(order.getSite().getSiteId());
-                    }
-                }
-                default -> orderDTO = modelMapper.map(order, OrderDTO.class);
+    private OrderDetailsDTO mapOrderToDTO(OrderDetails order, UserRole userRole) {
+        OrderDetailsDTO detailsDTO = OrderDetailsDTO.builder()
+                .orderId(order.getOrderId())
+                .status(order.getStatus())
+                .requiredDate(order.getRequiredDate())
+                .siteId(order.getSite().getSiteId()).build();
+
+        if(order.getSupplier() != null){
+            detailsDTO.setSupplierId(order.getSupplier().getUserId());
+        }
+
+        if (userRole == UserRole.PROCUREMENT_MANAGER) {
+            if (isOrderStatusValidForProcurementManager(order.getStatus())) {
+                detailsDTO.setItems(GetOrderItemsData(order));
             }
-
-            // SET ORDER ITEMS
-            if(!orderDTO.getItems().isEmpty()){
-                GetOrderItemsData(order, orderDTO);
+        } else if (userRole == UserRole.SUPPLIER) {
+            if (isOrderStatusValidForSupplier(order.getStatus())) {
+                detailsDTO.setItems(GetOrderItemsData(order));
             }
-            return orderDTO;
-        }).collect(Collectors.toList());
+        } else {
+            detailsDTO.setItems(GetOrderItemsData(order));
+        }
 
-        return orderDTOS;
+        return detailsDTO;
     }
 
-    @Override
-    public OrderDTO getOrderDetails(Long orderId) throws NotFoundException {
-        OrderDetails order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new NotFoundException("Couldn't find any orders with the given ID"));
-
-        OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
-        GetOrderItemsData(order, orderDTO);
-        return orderDTO;
+    private boolean isOrderStatusValidForProcurementManager(Status status) {
+        return status == Status.Pending || status == Status.Approved || status == Status.Cancelled;
     }
 
-    private void GetOrderItemsData(OrderDetails order, OrderDTO orderDTO) {
-        orderDTO.setSupplierId(order.getSupplier().getUserId());
-        orderDTO.setSiteId(order.getSite().getSiteId());
-
-        List<OrderItemDTO> orderItemDTOS = order.getItems()
-                .stream()
-                .map(item -> {
-                    OrderItemDTO orderItemDTO = modelMapper.map(item, OrderItemDTO.class);
-                    orderItemDTO.setOrderId(item.getOrder().getOrderId());
-                    orderItemDTO.setItemId(item.getItem().getItemId());
-
-                    return orderItemDTO;
-                }).collect(Collectors.toList());
-
-        orderDTO.setItems(orderItemDTOS);
+    private boolean isOrderStatusValidForSupplier(Status status) {
+        return status == Status.Approved || status == Status.Returned;
     }
 
-    @Override
-    public List<OrderItemDTO> getOrderItems(Long orderId) throws NotFoundException {
-        OrderDTO orderDTO = getOrderDetails(orderId);
-        return orderDTO.getItems();
+    private List<OrderItemDTO> GetOrderItemsData(OrderDetails order) {
+        return order.getItems().stream()
+                .map(item -> OrderItemDTO.builder()
+                            .orderItemId(item.getOrderItemId())
+                            .quantity(item.getQuantity())
+                            .status(item.getStatus())
+                            .itemId(item.getItem().getItemId())
+                            .orderId(order.getOrderId()).build()
+                )
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public ResponseEntity<ResponseMessage> addOrder(OrderDTO orderDTO) throws NotFoundException {
+    public ResponseEntity<ResponseMessage> addOrder(OrderDetailsDTO orderDTO) throws NotFoundException {
         OrderDetails order = modelMapper.map(orderDTO, OrderDetails.class);
         order.setOrderId(null);
         order.setStatus(Status.Pending);
         order.setSupplier(null);
+        order.setItems(null);
 
         Site site = commonFunctions.getUser().getSite();
         if(site == null){
@@ -129,6 +122,7 @@ public class OrderServiceImpl implements OrderService{
         for (OrderItemDTO orderItemDTO : orderItemDTOS) {
             OrderItem orderItem = modelMapper.map(orderItemDTO, OrderItem.class);
             orderItem.setOrderItemId(null);
+            orderItem.setStatus(Status.Pending);
 
             Optional<Item> itemOptional = itemRepository.findById(orderItemDTO.getItemId());
             if (itemOptional.isPresent()) {
@@ -142,6 +136,7 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseMessage> addOrderItem(OrderItemDTO orderItemDTO) throws NotFoundException {
         OrderDetails order = orderRepository.findById(orderItemDTO.getOrderId())
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
@@ -149,8 +144,11 @@ public class OrderServiceImpl implements OrderService{
         Item item = itemRepository.findById(orderItemDTO.getItemId())
                 .orElseThrow(() -> new NotFoundException("Item not found with the provided ID"));
 
+        item = entityManager.merge(item);
+
         OrderItem orderItem = modelMapper.map(orderItemDTO, OrderItem.class);
         orderItem.setOrderItemId(null);
+        orderItem.setStatus(Status.Pending);
         orderItem.setItem(item);
         orderItem.setOrder(order);
 
@@ -160,9 +158,16 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     @Transactional
-    public ResponseEntity<ResponseMessage> removeOrderItem(Long orderItemId) throws NotFoundException {
+    public ResponseEntity<ResponseMessage> removeOrderItem(Long orderItemId) throws NotFoundException, BadRequestException {
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new NotFoundException("Order Item not found with the provided ID"));
+
+        OrderDetails order = orderRepository.findById(orderItem.getOrder().getOrderId())
+                .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
+
+        if(order.getItems().size() == 1){
+            throw new BadRequestException("An order must contain at least one item");
+        }
 
         orderItem.setOrder(null);
         orderItem.setItem(null);
@@ -172,12 +177,24 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseMessage> setAsComplete(Long orderId) throws NotFoundException {
         OrderDetails order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
 
-        order.setStatus(Status.Complete);
+        // CREATE A COPY OF THE ORDER ITEMS LIST TO ITERATE OVER
+        List<OrderItem> orderItemsCopy = new ArrayList<>(order.getItems());
+
+        // SET THE STATUS OF EACH ORDER ITEM
+        for (OrderItem item : orderItemsCopy) {
+            item.setStatus(Status.Completed);
+            orderItemRepository.save(item);
+        }
+
+        // UPDATE THE ORDER STATUS
+        order.setStatus(Status.Completed);
         orderRepository.save(order);
+
         return  commonFunctions.successResponse("Order Status has been updated successfully");
     }
 
@@ -186,7 +203,7 @@ public class OrderServiceImpl implements OrderService{
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new NotFoundException("Order Item not found with the provided ID"));
 
-        orderItem.setStatus(Status.Complete);
+        orderItem.setStatus(Status.Completed);
         orderItemRepository.save(orderItem);
         return  commonFunctions.successResponse("Order Item Status has been updated successfully");
     }
@@ -196,7 +213,7 @@ public class OrderServiceImpl implements OrderService{
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new NotFoundException("Order Item not found with the provided ID"));
 
-        orderItem.setStatus(Status.Return);
+        orderItem.setStatus(Status.Returned);
         orderItemRepository.save(orderItem);
         return commonFunctions.successResponse("Order Item Status has been updated successfully");
     }
@@ -215,32 +232,68 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseMessage> setAsApproved(Long orderId) throws NotFoundException {
         OrderDetails order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
 
-        order.setStatus(Status.Approval);
+        // CREATE A COPY OF THE ORDER ITEMS LIST TO ITERATE OVER
+        List<OrderItem> orderItemsCopy = new ArrayList<>(order.getItems());
+
+        // SET THE STATUS OF EACH ORDER ITEM
+        for (OrderItem item : orderItemsCopy) {
+            item.setStatus(Status.Approved);
+            orderItemRepository.save(item);
+        }
+
+        // UPDATE THE ORDER STATUS
+        order.setStatus(Status.Approved);
         orderRepository.save(order);
+
         return  commonFunctions.successResponse("Order Status has been updated successfully");
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseMessage> setAsCanceled(Long orderId) throws NotFoundException {
         OrderDetails order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
 
-        order.setStatus(Status.Cancel);
+        // CREATE A COPY OF THE ORDER ITEMS LIST TO ITERATE OVER
+        List<OrderItem> orderItemsCopy = new ArrayList<>(order.getItems());
+
+        // SET THE STATUS OF EACH ORDER ITEM
+        for (OrderItem item : orderItemsCopy) {
+            item.setStatus(Status.Cancelled);
+            orderItemRepository.save(item);
+        }
+
+        // UPDATE THE ORDER STATUS
+        order.setStatus(Status.Cancelled);
         orderRepository.save(order);
+
         return  commonFunctions.successResponse("Order Status has been updated successfully");
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseMessage> setAsDelivered(Long orderId) throws NotFoundException {
         OrderDetails order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
 
+        // CREATE A COPY OF THE ORDER ITEMS LIST TO ITERATE OVER
+        List<OrderItem> orderItemsCopy = new ArrayList<>(order.getItems());
+
+        // SET THE STATUS OF EACH ORDER ITEM
+        for (OrderItem item : orderItemsCopy) {
+            item.setStatus(Status.Delivered);
+            orderItemRepository.save(item);
+        }
+
+        // UPDATE THE ORDER STATUS
         order.setStatus(Status.Delivered);
         orderRepository.save(order);
+
         return  commonFunctions.successResponse("Order Status has been updated successfully");
     }
 
@@ -255,12 +308,21 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Override
+    public ResponseEntity<ResponseMessage> setAsCancelledItem(Long orderItemId) throws NotFoundException {
+        OrderItem orderItem = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new NotFoundException("Order Item not found with the provided ID"));
+
+        orderItem.setStatus(Status.Cancelled);
+        orderItemRepository.save(orderItem);
+        return  commonFunctions.successResponse("Order Item Status has been updated successfully");
+    }
+
+    @Override
     public SiteDTO getSiteInfo(Long siteId) throws NotFoundException {
         Site site = siteRepository.findById(siteId)
                 .orElseThrow(() -> new NotFoundException("Site not found with the provided ID"));
 
         SiteDTO siteDTO = modelMapper.map(site, SiteDTO.class);
-        siteDTO.setSiteId(null);
         siteDTO.setAllocatedBudget(0);
         siteDTO.setSiteManagerId(null);
         siteDTO.setProcurementManagerId(null);

@@ -13,6 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Data
@@ -42,8 +43,8 @@ public class User implements UserDetails {
     @NotNull
     private String password;
 
-    @Enumerated(EnumType.STRING)
     @NotNull
+    @Enumerated(EnumType.STRING)
     private UserRole role;
 
     @NotNull
@@ -53,7 +54,7 @@ public class User implements UserDetails {
     private AuthToken authToken;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "u_site_id")
+    @JoinColumn(name = "site_id_ref")
     private Site site;
 
     @OneToOne(mappedBy = "siteManager", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -62,8 +63,8 @@ public class User implements UserDetails {
     @OneToOne(mappedBy = "procurementManager", cascade = CascadeType.ALL, orphanRemoval = true)
     private Site procurementManager;
 
-    @OneToOne(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
-    private OrderDetails order;
+    @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderDetails> order;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

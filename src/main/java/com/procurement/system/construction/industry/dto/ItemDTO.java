@@ -23,9 +23,6 @@ public class ItemDTO {
     private String manufacturer;
 
     @NotNull
-    private Integer quantityAvailable;
-
-    @NotNull
     private Double price;
 
     @NotNull

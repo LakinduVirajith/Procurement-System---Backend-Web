@@ -4,9 +4,11 @@ import com.procurement.system.construction.industry.common.CommonFunctions;
 import com.procurement.system.construction.industry.common.ResponseMessage;
 import com.procurement.system.construction.industry.dto.ItemDTO;
 import com.procurement.system.construction.industry.entity.Item;
+import com.procurement.system.construction.industry.entity.OrderItem;
 import com.procurement.system.construction.industry.exception.ConflictException;
 import com.procurement.system.construction.industry.exception.NotFoundException;
 import com.procurement.system.construction.industry.repository.ItemRepository;
+import com.procurement.system.construction.industry.repository.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService{
 
     private final ItemRepository itemRepository;
+    private final OrderItemRepository orderItemRepository;
     private final CommonFunctions commonFunctions;
     private final ModelMapper modelMapper;
 
@@ -80,10 +83,15 @@ public class ItemServiceImpl implements ItemService{
     }
 
     @Override
-    public ResponseEntity<ResponseMessage> deleteItem(Long itemId) throws NotFoundException {
+    public ResponseEntity<ResponseMessage> deleteItem(Long itemId) throws NotFoundException, ConflictException {
         Optional<Item> optionalItem = itemRepository.findById(itemId);
         if(optionalItem.isEmpty()){
             throw new NotFoundException("Couldn't find any item with the provided ID");
+        }
+
+        Optional<OrderItem> orderItem = orderItemRepository.findFirstByOrderItemId(itemId);
+        if(orderItem.isPresent()){
+            throw new ConflictException("The item is already in use in orders");
         }
 
         itemRepository.deleteById(itemId);

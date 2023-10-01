@@ -22,6 +22,7 @@ public class WebSecurityConfig {
 
     private static final String[] WHITELIST = {
             "/",
+            "/super/admin",
             "/api/v1/user/login",
             "/api/v1/user/refresh-token",
 
@@ -69,11 +70,11 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/supplier/**").hasAnyAuthority(Permission.PROCUREMENT_MANAGER_UPDATE.name(), Permission.SITE_MANAGER_UPDATE.name(), Permission.SUPPLIER_UPDATE.name(), Permission.ADMIN_UPDATE.name())
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/supplier/**").hasAnyAuthority(Permission.PROCUREMENT_MANAGER_DELETE.name(), Permission.SITE_MANAGER_DELETE.name(), Permission.SUPPLIER_DELETE.name(), Permission.ADMIN_DELETE.name())
 
-                        .requestMatchers("/api/v1/admin/**").hasRole(UserRole.ADMIN.name())
-                        .requestMatchers(HttpMethod.GET, "/api/v1/admin/**").hasAuthority(Permission.ADMIN_READ.name())
-                        .requestMatchers(HttpMethod.POST, "/api/v1/admin/**").hasAuthority(Permission.ADMIN_CREATE.name())
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/admin/**").hasAuthority(Permission.ADMIN_UPDATE.name())
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/admin/**").hasAuthority( Permission.ADMIN_DELETE.name())
+                        .requestMatchers("/api/v1/super-admin/**").hasRole(UserRole.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/super-admin/**").hasAuthority(Permission.ADMIN_READ.name())
+                        .requestMatchers(HttpMethod.POST, "/api/v1/super-admin/**").hasAuthority(Permission.ADMIN_CREATE.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/super-admin/**").hasAuthority(Permission.ADMIN_UPDATE.name())
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/super-admin/**").hasAuthority( Permission.ADMIN_DELETE.name())
                         .anyRequest().authenticated())
 
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

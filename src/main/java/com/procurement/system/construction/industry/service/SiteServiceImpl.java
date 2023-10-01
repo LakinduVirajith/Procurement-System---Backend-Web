@@ -7,6 +7,7 @@ import com.procurement.system.construction.industry.dto.UserDTO;
 import com.procurement.system.construction.industry.entity.Site;
 import com.procurement.system.construction.industry.entity.User;
 import com.procurement.system.construction.industry.exception.BadRequestException;
+import com.procurement.system.construction.industry.exception.InternalServerException;
 import com.procurement.system.construction.industry.exception.NotFoundException;
 import com.procurement.system.construction.industry.repository.SiteRepository;
 import com.procurement.system.construction.industry.repository.UserRepository;
@@ -17,8 +18,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,7 +34,8 @@ public class SiteServiceImpl implements SiteService{
     private final ModelMapper modelMapper;
 
     @Override
-    public ResponseEntity<ResponseMessage> add(SiteDTO siteDTO) throws BadRequestException, NotFoundException {
+    @Transactional
+    public ResponseEntity<ResponseMessage> add(SiteDTO siteDTO) throws BadRequestException, NotFoundException, InternalServerException {
         Long siteManagerId = siteDTO.getSiteManagerId();
 
         // SITE MANAGER EXCEPTIONS HANDLE
@@ -41,8 +43,7 @@ public class SiteServiceImpl implements SiteService{
 
         // SAVE INFO
         siteDTO.setSiteId(null);
-        Site site = new Site();
-        setSiteInfo(siteDTO, siteManager, site);
+        setSiteInfo(siteDTO, siteManager);
 
         return commonFunctions.successResponse("The site data has been added successfully.");
     }
@@ -52,23 +53,53 @@ public class SiteServiceImpl implements SiteService{
             throw new BadRequestException("The site manager information is required to proceed");
         }
 
-        Optional<User> optionalSiteManager = userRepository.findById(siteManagerId);
-        if(optionalSiteManager.isEmpty()){
-            throw new NotFoundException("Sorry, couldn't find the site manager's user data");
+        User siteManager = userRepository.findById(siteManagerId)
+                .orElseThrow(() -> new NotFoundException("Sorry, couldn't find the site manager's user data"));
+
+        if(!siteManager.getRole().name().equals("SITE_MANAGER")){
+            throw new BadRequestException("Not a valid site manager role");
         }
 
-        return optionalSiteManager.get();
+        return siteManager;
     }
 
-    private void setSiteInfo(SiteDTO siteDTO, User siteManager, Site site) {
-        modelMapper.map(siteDTO, site);
+    private User procurementManagerExceptions(Long procurementManagerId) throws BadRequestException, NotFoundException {
+        User procurementManager = userRepository.findById(procurementManagerId)
+                .orElseThrow(() -> new NotFoundException("Sorry, couldn't find the procurement manager's user data"));
+
+        if(!procurementManager.getRole().name().equals("PROCUREMENT_MANAGER")){
+            throw new BadRequestException("Not a valid procurement manager role");
+        }
+
+        return procurementManager;
+    }
+
+    private void setSiteInfo(SiteDTO siteDTO, User siteManager) throws InternalServerException, BadRequestException, NotFoundException {
+        Site site = modelMapper.map(siteDTO, Site.class);
         site.setSiteManager(siteManager);
 
         Long procurementManagerId = siteDTO.getProcurementManagerId();
-        Optional<User> procurementManager = userRepository.findById(procurementManagerId);
-        procurementManager.ifPresent(site::setProcurementManager);
+        if(procurementManagerId != null) {
+            User procurementManager = procurementManagerExceptions(procurementManagerId);
+            site.setProcurementManager(procurementManager);
+        }
 
-        siteRepository.save(site);
+        updateUserRef(site, siteManager);
+    }
+
+    private void updateUserRef(Site site, User siteManager) throws InternalServerException {
+        Site executedSite = siteRepository.save(site);
+
+        siteManager.setSite(executedSite);
+        userRepository.save(siteManager);
+
+        if(executedSite.getProcurementManager() != null) {
+            User procurementManager = userRepository.findById(executedSite.getProcurementManager().getUserId())
+                    .orElseThrow(() -> new InternalServerException("Internal server error occurred"));
+
+            procurementManager.setSite(executedSite);
+            userRepository.save(procurementManager);
+        }
     }
 
     @Override
@@ -84,7 +115,9 @@ public class SiteServiceImpl implements SiteService{
                 .map(site -> {
                     SiteDTO siteDTO = modelMapper.map(site, SiteDTO.class);
                     siteDTO.setSiteManagerId(site.getSiteManager().getUserId());
-                    siteDTO.setProcurementManagerId(site.getProcurementManager().getUserId());
+                    if(site.getProcurementManager() != null){
+                        siteDTO.setProcurementManagerId(site.getProcurementManager().getUserId());
+                    }
 
                     return siteDTO;
                 })
@@ -103,31 +136,69 @@ public class SiteServiceImpl implements SiteService{
         Site site = siteOptional.get();
         SiteDTO siteDTO = modelMapper.map(site, SiteDTO.class);
         siteDTO.setSiteManagerId(site.getSiteManager().getUserId());
-        siteDTO.setProcurementManagerId(site.getProcurementManager().getUserId());
+        if(site.getProcurementManager() != null){
+            siteDTO.setProcurementManagerId(site.getProcurementManager().getUserId());
+        }
 
         return siteDTO;
     }
 
     @Override
-    public ResponseEntity<ResponseMessage> updateSite(SiteDTO siteDTO) throws BadRequestException, NotFoundException {
-        Long siteManagerId = siteDTO.getSiteManagerId();
+    @Transactional
+    public ResponseEntity<ResponseMessage> updateSite(SiteDTO siteDTO) throws BadRequestException, NotFoundException, InternalServerException {
+        Site site = siteRepository.findById(siteDTO.getSiteId())
+                .orElseThrow(() -> new NotFoundException("Couldn't find any site with the provided ID"));
 
-        // SITE MANAGER EXCEPTIONS HANDLE
-        User siteManager = siteManagerExceptions(siteManagerId);
-
-        Optional<Site> siteOptional = siteRepository.findById(siteDTO.getSiteId());
-        if(siteOptional.isEmpty()){
-            throw new NotFoundException("Couldn't find any site with the provided ID");
+        // IF SITE MANAGER EXIST
+        if(site.getSiteManager() != null) {
+            User user = userRepository.findById(site.getSiteManager().getUserId())
+                    .orElseThrow(() -> new InternalServerException("Internal server error occurred"));
+            user.setSite(null);
+            userRepository.save(user);
         }
 
-        Site site = siteOptional.get();
-        setSiteInfo(siteDTO, siteManager, site);
+        // IF PROCUREMENT MANAGER EXIST
+        if(site.getProcurementManager() != null){
+            User user = userRepository.findById(site.getProcurementManager().getUserId())
+                    .orElseThrow(() -> new InternalServerException("Internal server error occurred"));
+            user.setSite(null);
+            userRepository.save(user);
+        }
 
+        // SITE MANAGER EXCEPTIONS HANDLE
+        Long siteManagerId = siteDTO.getSiteManagerId();
+        User siteManager = siteManagerExceptions(siteManagerId);
+
+        // SET SITE DATA
+        if(siteDTO.getSiteName() != null){
+            site.setSiteName(siteDTO.getSiteName());
+        }
+        if(siteDTO.getLocation() != null){
+            site.setLocation(siteDTO.getLocation());
+        }
+        if(siteDTO.getStartDate() != null){
+            site.setStartDate(siteDTO.getStartDate());
+        }
+        if(siteDTO.getContactNumber() != null){
+            site.setContactNumber(siteDTO.getContactNumber());
+        }
+        if(siteDTO.getAllocatedBudget() != 0){
+            site.setAllocatedBudget(siteDTO.getAllocatedBudget());
+        }
+        if(siteDTO.getSiteManagerId() != null){
+            site.setSiteManager(siteManager);
+        }
+        if(siteDTO.getProcurementManagerId() != null){
+            User procurementManager = procurementManagerExceptions(siteDTO.getProcurementManagerId());
+            site.setProcurementManager(procurementManager);
+        }
+
+        updateUserRef(site, siteManager);
         return commonFunctions.successResponse("The site data has been updated successfully.");
     }
 
     @Override
-    public ResponseEntity<ResponseMessage> deleteSite(Long siteId, Boolean deleteAllOption) throws NotFoundException {
+    public ResponseEntity<ResponseMessage> deleteSite(Long siteId) throws NotFoundException {
         Optional<Site> siteOptional = siteRepository.findById(siteId);
         if(siteOptional.isEmpty()){
             throw new NotFoundException("Couldn't find any site with the provided ID");
@@ -136,37 +207,56 @@ public class SiteServiceImpl implements SiteService{
         Site site = siteOptional.get();
         site.setSiteManager(null);
         site.setProcurementManager(null);
-        if(deleteAllOption){
-            siteRepository.save(site);
-            siteRepository.deleteById(siteId);
-        }else{
-            site.setUsers(null);
-            siteRepository.save(site);
-        }
+        siteRepository.save(site);
+        siteRepository.deleteById(siteId);
 
         return commonFunctions.successResponse("The site has been deleted successfully");
     }
 
     @Override
-    public ResponseEntity<ResponseMessage> assignSite(Long siteId, String userEmail) throws NotFoundException {
-        Optional<Site> siteOptional = siteRepository.findById(siteId);
-        if(siteOptional.isEmpty()){
-            throw new NotFoundException("Couldn't find any site with the provided ID");
+    @Transactional
+    public ResponseEntity<ResponseMessage> allocateSite(Long siteId, String userEmail) throws NotFoundException, BadRequestException {
+        Site site = siteRepository.findById(siteId)
+                .orElseThrow(() -> new NotFoundException("Couldn't find any site with the provided ID"));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("Couldn't find any user with the provided email address"));
+
+        if(user.getSite() != null){
+            throw new BadRequestException("The user has been already allocated into site");
         }
 
-        Optional<User> optionalUser = userRepository.findByEmail(userEmail);
-        if(optionalUser.isEmpty()){
-            throw new NotFoundException("Couldn't find any user with the provided email address");
-        }
+        user.setSite(site);
+        userRepository.save(user);
 
-        Site site = siteOptional.get();
         List<User> users = site.getUsers();
-        users.add(optionalUser.get());
+        users.add(user);
         site.setUsers(users);
-
         siteRepository.save(site);
 
-        return commonFunctions.successResponse("The user has been assigned successfully");
+        return commonFunctions.successResponse("The user has been allocate successfully");
+    }
+
+    @Override
+    public ResponseEntity<ResponseMessage> deAllocateSite(Long siteId, String userEmail) throws NotFoundException, BadRequestException {
+        Site site = siteRepository.findById(siteId)
+                .orElseThrow(() -> new NotFoundException("Couldn't find any site with the provided ID"));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("Couldn't find any user with the provided email address"));
+
+        if(user.getSite() == null){
+            throw new BadRequestException("the user has already been deallocated");
+        }
+
+        if(site.getSiteManager().getUserId().equals(user.getUserId())){
+            throw new BadRequestException("Site manager can't be deallocated");
+        }
+
+        user.setSite(null);
+        userRepository.save(user);
+
+        return commonFunctions.successResponse("The user has been deallocate successfully");
     }
 
     @Override
@@ -176,30 +266,19 @@ public class SiteServiceImpl implements SiteService{
             throw new NotFoundException("Couldn't find any site with the provided ID");
         }
 
-        Site site = siteOptional.get();
-        List<User> users = site.getUsers();
+        List<User> users = userRepository.findBySiteSiteId(siteId, pageable);
         if(users.isEmpty()){
             throw new NotFoundException("Couldn't find any users in this site");
         }
 
-        // PAGINATE THE USER LIST BASED ON THE PROVIDED PAGEABLE
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-
         List<UserDTO> userDTOs = users.stream()
-                .map(user -> modelMapper.map(user, UserDTO.class))
+                .map(user -> {
+                    UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+                    userDTO.setPassword(null);
+                    return userDTO;
+                })
                 .collect(Collectors.toList());
 
-        List<UserDTO> pageUserDTOs;
-
-        if (startItem < userDTOs.size()) {
-            int toIndex = Math.min(startItem + pageSize, userDTOs.size());
-            pageUserDTOs = userDTOs.subList(startItem, toIndex);
-        } else {
-            pageUserDTOs = Collections.emptyList();
-        }
-
-        return new PageImpl<>(pageUserDTOs, pageable, userDTOs.size());
+        return new PageImpl<>(userDTOs, pageable, userDTOs.size());
     }
 }

@@ -17,5 +17,5 @@ public interface ItemService {
 
     ResponseEntity<ResponseMessage> updateItem(ItemDTO itemDTO) throws NotFoundException;
 
-    ResponseEntity<ResponseMessage> deleteItem(Long itemId) throws NotFoundException;
+    ResponseEntity<ResponseMessage> deleteItem(Long itemId) throws NotFoundException, ConflictException;
 }

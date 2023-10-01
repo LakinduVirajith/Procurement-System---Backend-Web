@@ -1,9 +1,10 @@
 package com.procurement.system.construction.industry.controller;
 
 import com.procurement.system.construction.industry.common.ResponseMessage;
-import com.procurement.system.construction.industry.dto.OrderDTO;
+import com.procurement.system.construction.industry.dto.OrderDetailsDTO;
 import com.procurement.system.construction.industry.dto.OrderItemDTO;
 import com.procurement.system.construction.industry.dto.SiteDTO;
+import com.procurement.system.construction.industry.exception.BadRequestException;
 import com.procurement.system.construction.industry.exception.NotFoundException;
 import com.procurement.system.construction.industry.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,26 +27,14 @@ public class OrderController {
     // ALL USERS ACCESS
     @Operation(summary = "Get All Order Info", description = "Retrieve details of all orders.")
     @GetMapping("all-users/order/all/details")
-    public List<OrderDTO> getAllOrderDetails() throws NotFoundException {
+    public List<OrderDetailsDTO> getAllOrderDetails() throws NotFoundException {
         return orderService.getAllOrderDetails();
-    }
-
-    @Operation(summary = "Get Order Info By Id", description = "Retrieve details of a specific order by its ID.")
-    @GetMapping("all-users/order/details/{id}")
-    public OrderDTO getOrderDetails(@PathVariable("id") Long orderId) throws NotFoundException {
-        return orderService.getOrderDetails(orderId);
-    }
-
-    @Operation(summary = "Get Order Items Info", description = "Retrieve items for a specific order by its ID.")
-    @GetMapping("all-users/order/details/items/{id}")
-    public List<OrderItemDTO> getOrderItems(@PathVariable("id") Long orderId) throws NotFoundException {
-        return orderService.getOrderItems(orderId);
     }
 
     // SITE MANAGER ACCESS
     @Operation(summary = "Add a New Order", description = " Add a new order providing necessary details.")
     @PostMapping("site-manager/order/add")
-    public ResponseEntity<ResponseMessage> addOrder(@Valid @RequestBody OrderDTO orderDTO) throws NotFoundException {
+    public ResponseEntity<ResponseMessage> addOrder(@Valid @RequestBody OrderDetailsDTO orderDTO) throws NotFoundException {
         return orderService.addOrder(orderDTO);
     }
 
@@ -57,7 +46,7 @@ public class OrderController {
 
     @Operation(summary = "Add an Item from Order", description = "Remove an item from an order using orderItemId.")
     @DeleteMapping("site-manager/order/delete/item/{id}")
-    public ResponseEntity<ResponseMessage> removeOrderItem(@PathVariable("id") Long orderItemId) throws NotFoundException {
+    public ResponseEntity<ResponseMessage> removeOrderItem(@PathVariable("id") Long orderItemId) throws NotFoundException, BadRequestException {
         return orderService.removeOrderItem(orderItemId);
     }
 
@@ -109,6 +98,12 @@ public class OrderController {
     @PutMapping("supplier/item/delivered/{id}")
     public ResponseEntity<ResponseMessage> setAsDeliveredItem(@PathVariable("id") Long orderItemId) throws NotFoundException {
         return orderService.setAsDeliveredItem(orderItemId);
+    }
+
+    @Operation(summary = "Mark Item as Cancelled", description = "Use this option to cancel the delivery of a specific item within the order.")
+    @PutMapping("supplier/item/cancelled/{id}")
+    public ResponseEntity<ResponseMessage> setAsCancelledItem(@PathVariable("id") Long orderItemId) throws NotFoundException {
+        return orderService.setAsCancelledItem(orderItemId);
     }
 
     @Operation(summary = "Retrieve Site Information", description = "Retrieve information about the site associated with this order.")

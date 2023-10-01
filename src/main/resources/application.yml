@@ -34,7 +34,7 @@ spring:
     url: jdbc:mysql://localhost:3306/procurement_system
     password: Lakindu@MySQL
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: update
 

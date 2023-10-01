@@ -9,23 +9,22 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrderDTO {
+public class OrderDetailsDTO {
 
     private Long orderId;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
     private Status status;
 
     @NotNull
-    private Date requiredDate;
+    private LocalDateTime requiredDate;
 
     private List<OrderItemDTO> items;
 

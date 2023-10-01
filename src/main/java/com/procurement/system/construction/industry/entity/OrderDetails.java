@@ -32,11 +32,11 @@ public class OrderDetails {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
 
-    @OneToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "supplier_id")
     private User supplier;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "o_site_id")
+    @JoinColumn(name = "site_id_ref")
     private Site site;
 }

@@ -17,6 +17,8 @@ public class OrderItemDTO {
     private Long orderItemId;
 
     @NotNull
+    private int quantity;
+
     @Enumerated(EnumType.STRING)
     private Status status;
 
