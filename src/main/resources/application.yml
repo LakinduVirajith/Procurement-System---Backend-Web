@@ -10,7 +10,7 @@ base:
 application:
   security:
     jwt:
-      secret-key: 53923e15289b6f2642e7ba918fb397cb88623bde84df90d196a5f494bd126418
+      secret-key: "YOUR SECRET KEY"
       expiration: 7200000 #TWO HOURS
       refresh-token:
         expiration: 2419200000 #ONE MONTH
@@ -32,7 +32,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     url: jdbc:mysql://localhost:3306/procurement_system
-    password: Lakindu@MySQL
+    password: "YOUR SQL PASSWORD"
   jpa:
     show-sql: true
     hibernate:

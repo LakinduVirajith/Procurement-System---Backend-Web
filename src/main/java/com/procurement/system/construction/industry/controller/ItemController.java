@@ -43,7 +43,7 @@ public class ItemController {
     }
 
     @DeleteMapping("item/delete/{id}")
-    public ResponseEntity<ResponseMessage> deleteItem(@PathVariable("id") Long itemId) throws NotFoundException {
+    public ResponseEntity<ResponseMessage> deleteItem(@PathVariable("id") Long itemId) throws NotFoundException, ConflictException {
         return itemService.deleteItem(itemId);
     }
 }
