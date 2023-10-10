@@ -115,7 +115,7 @@ public class UserServiceImpl implements UserService{
 
         // NOT FOUND EXCEPTION
         if(userCondition.isEmpty()){
-            throw new NotFoundException("Invalid user name or password");
+            throw new NotFoundException("Invalid user name");
         }
 
         // NOT ACTIVATE EXCEPTION
@@ -123,10 +123,14 @@ public class UserServiceImpl implements UserService{
             throw new ForbiddenException("Your account is not activated yet.");
         }
 
+        User user  = userCondition.get();
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new NotFoundException("Invalid user password");
+        }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
-        User user  = userCondition.get();
 
         // GENERATE ACCESS-TOKEN
         var jwtToken = jwtService.generateToken(user);
@@ -139,6 +143,7 @@ public class UserServiceImpl implements UserService{
                 .statusCode(200).
                 status(HttpStatus.OK).
                 message("User authenticated successfully").
+                userRole(user.getRole().name()).
                 accessToken(jwtToken).
                 refreshToken(refreshToken).build());
     }
@@ -173,6 +178,7 @@ public class UserServiceImpl implements UserService{
                     statusCode(200).
                     status(HttpStatus.OK).
                     message("Using refresh token user authenticated successfully").
+                    userRole(user.getRole().name()).
                     accessToken(accessToken).
                     refreshToken(refreshToken).build();
         }

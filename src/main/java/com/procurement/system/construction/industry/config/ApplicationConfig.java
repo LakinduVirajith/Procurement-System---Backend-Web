@@ -1,7 +1,5 @@
 package com.procurement.system.construction.industry.config;
 
-import com.procurement.system.construction.industry.dto.SiteDTO;
-import com.procurement.system.construction.industry.entity.Site;
 import com.procurement.system.construction.industry.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
