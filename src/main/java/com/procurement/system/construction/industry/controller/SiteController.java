@@ -4,6 +4,7 @@ import com.procurement.system.construction.industry.common.ResponseMessage;
 import com.procurement.system.construction.industry.dto.SiteDTO;
 import com.procurement.system.construction.industry.dto.UserDTO;
 import com.procurement.system.construction.industry.exception.BadRequestException;
+import com.procurement.system.construction.industry.exception.ConflictException;
 import com.procurement.system.construction.industry.exception.InternalServerException;
 import com.procurement.system.construction.industry.exception.NotFoundException;
 import com.procurement.system.construction.industry.service.SiteService;
@@ -27,7 +28,7 @@ public class SiteController {
 
     @Operation(summary = "Create Site", description = "Create site using necessary site information.")
     @PostMapping("site/add")
-    public ResponseEntity<ResponseMessage> add(@Valid @RequestBody SiteDTO siteDTO) throws BadRequestException, NotFoundException, InternalServerException {
+    public ResponseEntity<ResponseMessage> add(@Valid @RequestBody SiteDTO siteDTO) throws BadRequestException, NotFoundException, InternalServerException, ConflictException {
         return siteService.add(siteDTO);
     }
 
@@ -45,7 +46,7 @@ public class SiteController {
 
     @Operation(summary = "Update Site Info", description = "Update site info using necessary site information.")
     @PutMapping("site/update")
-    public ResponseEntity<ResponseMessage> updateSite(@Valid @RequestBody SiteDTO siteDTO) throws BadRequestException, NotFoundException, InternalServerException {
+    public ResponseEntity<ResponseMessage> updateSite(@Valid @RequestBody SiteDTO siteDTO) throws BadRequestException, NotFoundException, InternalServerException, ConflictException {
         return siteService.updateSite(siteDTO);
     }
 

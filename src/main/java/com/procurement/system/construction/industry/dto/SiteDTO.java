@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -22,7 +22,7 @@ public class SiteDTO {
     @NotNull
     private String location;
 
-    private Date startDate;
+    private LocalDate startDate;
 
     @NotNull
     private String contactNumber;

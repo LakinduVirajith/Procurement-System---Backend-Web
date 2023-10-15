@@ -64,7 +64,7 @@ public class User implements UserDetails {
     private Site procurementManager;
 
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderDetails> order;
+    private List<OrderDetails> orders;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

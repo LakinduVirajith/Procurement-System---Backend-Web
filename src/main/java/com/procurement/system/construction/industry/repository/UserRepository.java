@@ -16,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findBySiteSiteId(Long siteId, Pageable pageable);
 
     Optional<User> findFirstByRole(UserRole admin);
+
+    List<User> findByRoleAndSiteSiteIdAndIsActive(UserRole supplier, Long siteId, boolean b);
 }

@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -24,7 +24,7 @@ public class OrderDetailsDTO {
     private Status status;
 
     @NotNull
-    private LocalDateTime requiredDate;
+    private LocalDate requiredDate;
 
     private List<OrderItemDTO> items;
 

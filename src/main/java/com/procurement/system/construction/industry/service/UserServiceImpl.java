@@ -5,6 +5,7 @@ import com.procurement.system.construction.industry.common.AuthenticationRespons
 import com.procurement.system.construction.industry.common.CommonFunctions;
 import com.procurement.system.construction.industry.common.ResponseMessage;
 import com.procurement.system.construction.industry.config.jwt.JwtService;
+import com.procurement.system.construction.industry.dto.GetUserDTO;
 import com.procurement.system.construction.industry.dto.UserDTO;
 import com.procurement.system.construction.industry.entity.AuthToken;
 import com.procurement.system.construction.industry.entity.User;
@@ -13,6 +14,8 @@ import com.procurement.system.construction.industry.repository.AuthTokenReposito
 import com.procurement.system.construction.industry.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,7 +43,7 @@ public class UserServiceImpl implements UserService{
 
         // EMAIL CONFLICT EXCEPTION
         if(emailCondition.isPresent()){
-            throw new ConflictException("Email already exists");
+            throw new ConflictException("email already exists");
         }
 
         // ENCODE PASSWORD USING PASSWORD-ENCODER
@@ -56,39 +59,50 @@ public class UserServiceImpl implements UserService{
         modelMapper.map(userDTO, user);
         userRepository.save(user);
 
-        return commonFunctions.successResponse("User registered successfully");
+        return commonFunctions.successResponse("user registered successfully");
+    }
+
+    @Override
+    public Page<GetUserDTO> getAllUsers(Pageable pageable) throws NotFoundException {
+        Page<User> users  = userRepository.findAll(pageable);
+
+        if(users .isEmpty()){
+            throw new NotFoundException("no users have been found in the system");
+        }
+
+        return users.map(user -> modelMapper.map(user, GetUserDTO.class));
     }
 
     @Override
     public ResponseEntity<ResponseMessage> activate(Long userId) throws NotFoundException, ConflictException {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Oops! We couldn't find this account"));
+                .orElseThrow(() -> new NotFoundException("invalid user id"));
 
         // ALREADY ACTIVATED EXCEPTION
         if(user.getIsActive()){
-            throw new ConflictException("User is already activated");
+            throw new ConflictException("user is already activated");
         }
 
         user.setIsActive(true);
         userRepository.save(user);
 
-        return commonFunctions.successResponse("User activated successfully");
+        return commonFunctions.successResponse("user activated successfully");
     }
 
     @Override
     public ResponseEntity<ResponseMessage> deactivate(Long userId) throws NotFoundException, ConflictException {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Oops! We couldn't find this account"));
+                .orElseThrow(() -> new NotFoundException("invalid user id"));
 
         // ALREADY ACTIVATED EXCEPTION
         if(!user.getIsActive()){
-            throw new ConflictException("User is already deactivated");
+            throw new ConflictException("user is already deactivated");
         }
 
         user.setIsActive(false);
         userRepository.save(user);
 
-        return commonFunctions.successResponse("User deactivated successfully");
+        return commonFunctions.successResponse("user deactivated successfully");
     }
 
     @Override
@@ -97,7 +111,7 @@ public class UserServiceImpl implements UserService{
 
         // INVALID USER EXCEPTION
         if(userCondition.isEmpty()){
-            throw new NotFoundException("Oops! We couldn't find any user with the email address you provided");
+            throw new NotFoundException("provided email address is invalid");
         }
         User user = userCondition.get();
 
@@ -106,7 +120,7 @@ public class UserServiceImpl implements UserService{
         user.setPassword(encodedPassword);
         userRepository.save(user);
 
-        return commonFunctions.successResponse("Password reset successfully");
+        return commonFunctions.successResponse("password reset successfully");
     }
 
     @Override
@@ -115,17 +129,17 @@ public class UserServiceImpl implements UserService{
 
         // NOT FOUND EXCEPTION
         if(userCondition.isEmpty()){
-            throw new NotFoundException("Invalid user name");
+            throw new NotFoundException("invalid user name");
         }
 
         // NOT ACTIVATE EXCEPTION
         if(!userCondition.get().getIsActive()){
-            throw new ForbiddenException("Your account is not activated yet.");
+            throw new ForbiddenException("your account is not activated yet.");
         }
 
         User user  = userCondition.get();
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new NotFoundException("Invalid user password");
+            throw new NotFoundException("invalid user password");
         }
 
         authenticationManager.authenticate(
@@ -142,7 +156,7 @@ public class UserServiceImpl implements UserService{
         return ResponseEntity.ok().body(AuthenticationResponse.builder()
                 .statusCode(200).
                 status(HttpStatus.OK).
-                message("User authenticated successfully").
+                message("user authenticated successfully").
                 userRole(user.getRole().name()).
                 accessToken(jwtToken).
                 refreshToken(refreshToken).build());
@@ -201,10 +215,10 @@ public class UserServiceImpl implements UserService{
             existToken.setRevoked(true);
             authTokenRepository.save(existToken);
         }else{
-            throw new BadRequestException("Invalid logout");
+            throw new BadRequestException("invalid logout");
         }
 
-        return commonFunctions.successResponse("User logout successfully");
+        return commonFunctions.successResponse("user logout successfully");
     }
 
     private void saveToken(User user, String jwtToken) {
