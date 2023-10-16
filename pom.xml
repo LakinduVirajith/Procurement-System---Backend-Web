@@ -125,7 +125,7 @@
 			<scope>test</scope>
 			<version>6.1.4</version>
 		</dependency>
-	</dependencies>
+    </dependencies>
 
 	<build>
 		<plugins>
