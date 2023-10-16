@@ -16,13 +16,15 @@ public class AuthToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long TokenId;
+    private Long tokenId;
 
     @NotNull
     private String token;
 
+    @Builder.Default
     private boolean expired = false;
 
+    @Builder.Default
     private boolean revoked = false;
 
     @OneToOne

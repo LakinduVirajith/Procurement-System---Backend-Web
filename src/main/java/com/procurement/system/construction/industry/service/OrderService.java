@@ -1,6 +1,7 @@
 package com.procurement.system.construction.industry.service;
 
 import com.procurement.system.construction.industry.common.ResponseMessage;
+import com.procurement.system.construction.industry.dto.GetUserDTO;
 import com.procurement.system.construction.industry.dto.OrderDetailsDTO;
 import com.procurement.system.construction.industry.dto.OrderItemDTO;
 import com.procurement.system.construction.industry.dto.SiteDTO;
@@ -29,7 +30,9 @@ public interface OrderService {
     ResponseEntity<ResponseMessage> setAsReturnItem(Long orderItemId) throws NotFoundException;
 
     // PROCUREMENT MANAGER ACCESS
-    ResponseEntity<ResponseMessage> assignSupplier(Long orderId, Long supplierId) throws NotFoundException;
+    List<GetUserDTO> getSuppliers() throws NotFoundException;
+
+    ResponseEntity<ResponseMessage> assignSupplier(Long orderId, Long supplierId) throws NotFoundException, BadRequestException;
 
     ResponseEntity<ResponseMessage> setAsApproved(Long orderId) throws NotFoundException;
 

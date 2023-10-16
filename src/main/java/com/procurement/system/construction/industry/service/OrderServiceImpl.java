@@ -2,6 +2,7 @@ package com.procurement.system.construction.industry.service;
 
 import com.procurement.system.construction.industry.common.CommonFunctions;
 import com.procurement.system.construction.industry.common.ResponseMessage;
+import com.procurement.system.construction.industry.dto.GetUserDTO;
 import com.procurement.system.construction.industry.dto.OrderDetailsDTO;
 import com.procurement.system.construction.industry.dto.OrderItemDTO;
 import com.procurement.system.construction.industry.dto.SiteDTO;
@@ -40,14 +41,14 @@ public class OrderServiceImpl implements OrderService{
     @Transactional
     public List<OrderDetailsDTO> getAllOrderDetails() throws NotFoundException {
         User user = commonFunctions.getUser();
-        Long siteId = user.getSite().getSiteId();
-        if (siteId == null) {
-            throw new NotFoundException("You are not currently assigned to any site.");
+        if (user.getSite() == null) {
+            throw new NotFoundException("you are not currently assigned to any site.");
         }
 
+        Long siteId = user.getSite().getSiteId();
         List<OrderDetails> orders = orderRepository.findBySiteSiteId(siteId);
         if (orders.isEmpty()) {
-            throw new NotFoundException("Haven't found any orders for this site yet.");
+            throw new NotFoundException("haven't found any orders for this site yet.");
         }
 
         return orders.stream()
@@ -112,7 +113,7 @@ public class OrderServiceImpl implements OrderService{
 
         Site site = commonFunctions.getUser().getSite();
         if(site == null){
-            throw new NotFoundException("You are not currently assigned to any site.");
+            throw new NotFoundException("you are not currently assigned to any site.");
         }
         order.setSite(site);
         OrderDetails executedOrder = orderRepository.save(order);
@@ -132,7 +133,7 @@ public class OrderServiceImpl implements OrderService{
             }
         }
 
-        return commonFunctions.successResponse("Order has been added successfully");
+        return commonFunctions.successResponse("order has been added successfully");
     }
 
     @Override
@@ -219,16 +220,57 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Override
-    public ResponseEntity<ResponseMessage> assignSupplier(Long orderId, Long supplierId) throws NotFoundException {
+    public List<GetUserDTO> getSuppliers() throws NotFoundException {
+        User user = commonFunctions.getUser();
+        if (user.getSite() == null) {
+            throw new NotFoundException("you are not currently assigned to any site");
+        }
+
+        Long siteId = user.getSite().getSiteId();
+        List<User> users = userRepository.findByRoleAndSiteSiteIdAndIsActive(UserRole.SUPPLIER, siteId, true);
+        if (users.isEmpty()) {
+            throw new NotFoundException("no suppliers have been assigned to this site yet");
+        }
+
+        List<GetUserDTO> userDTOs = users.stream()
+            .map(userEntity -> modelMapper.map(userEntity, GetUserDTO.class))
+            .collect(Collectors.toList());
+
+        return userDTOs;
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<ResponseMessage> assignSupplier(Long orderId, Long supplierId) throws NotFoundException, BadRequestException {
+        User user = commonFunctions.getUser();
+        if (user.getSite() == null) {
+            throw new NotFoundException("you are not currently assigned to any site");
+        }
+        
         OrderDetails order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new NotFoundException("Order not found with the provided ID"));
+                .orElseThrow(() -> new NotFoundException("order looking for does not exist"));
 
-        User user = userRepository.findById(supplierId)
-                .orElseThrow(() -> new NotFoundException("Supplier not found with the provided ID"));
+        User supplier = userRepository.findById(supplierId)
+                .orElseThrow(() -> new NotFoundException("supplier looking for does not exist"));
 
-        order.setSupplier(user);
+        if(!order.getSite().getSiteId().equals(user.getSite().getSiteId())){
+            throw new BadRequestException("invalid order id");
+        }
+        if(!supplier.getRole().name().equals("SUPPLIER")){
+            throw new BadRequestException("invalid supplier role");
+        }
+        if(!order.getSite().getSiteId().equals(user.getSite().getSiteId())){
+            throw new BadRequestException("invalid supplier assignment for this order");
+        }
+
+        order.setSupplier(supplier);
+
+        List<OrderDetails> supplierOrders = supplier.getOrders();
+        supplierOrders.add(order);
+
         orderRepository.save(order);
-        return commonFunctions.successResponse("Supplier has been assigned successfully");
+        userRepository.save(supplier);
+        return commonFunctions.successResponse("supplier has been assigned successfully");
     }
 
     @Override

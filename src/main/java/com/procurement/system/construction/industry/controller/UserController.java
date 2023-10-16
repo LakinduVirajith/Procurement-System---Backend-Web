@@ -3,6 +3,7 @@ package com.procurement.system.construction.industry.controller;
 import com.procurement.system.construction.industry.common.AuthenticationRequest;
 import com.procurement.system.construction.industry.common.AuthenticationResponse;
 import com.procurement.system.construction.industry.common.ResponseMessage;
+import com.procurement.system.construction.industry.dto.GetUserDTO;
 import com.procurement.system.construction.industry.dto.UserDTO;
 import com.procurement.system.construction.industry.exception.*;
 import com.procurement.system.construction.industry.service.UserService;
@@ -10,6 +11,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +32,12 @@ public class UserController {
         return userService.addUser(userDTO);
     }
 
+    @Operation(summary = "Get all users", description = "Get all users in the system")
+    @GetMapping("super-admin/get/all/users")
+    public Page<GetUserDTO> getAllUsers(Pageable pageable) throws NotFoundException {
+         return userService.getAllUsers(pageable);
+    }
+
     @Operation(summary = "Activate User Account", description = "Activate a user account using an userId")
     @GetMapping("super-admin/activate/{id}")
     public ResponseEntity<ResponseMessage> userActivate(@PathVariable("id") Long userId) throws ConflictException, NotFoundException {
@@ -42,8 +52,8 @@ public class UserController {
 
     @Operation(summary = "Reset Password", description = "Initiate password reset by Providing necessary details.")
     @PostMapping("super-admin/reset-password")
-    public ResponseEntity<ResponseMessage> restPassword(String email, String password) throws NotFoundException {
-        return userService.restPassword(email, password);
+    public ResponseEntity<ResponseMessage> resetPassword(String email, @RequestBody String password) throws NotFoundException {
+        return userService.resetPassword(email, password);
     }
 
     // GLOBAL ACCESS

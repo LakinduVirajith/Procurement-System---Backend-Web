@@ -1,6 +1,7 @@
 package com.procurement.system.construction.industry.controller;
 
 import com.procurement.system.construction.industry.common.ResponseMessage;
+import com.procurement.system.construction.industry.dto.GetUserDTO;
 import com.procurement.system.construction.industry.dto.OrderDetailsDTO;
 import com.procurement.system.construction.industry.dto.OrderItemDTO;
 import com.procurement.system.construction.industry.dto.SiteDTO;
@@ -44,7 +45,7 @@ public class OrderController {
         return orderService.addOrderItem(orderItemDTO);
     }
 
-    @Operation(summary = "Add an Item from Order", description = "Remove an item from an order using orderItemId.")
+    @Operation(summary = "Remove an Item from Order", description = "Remove an item from an order using orderItemId.")
     @DeleteMapping("site-manager/order/delete/item/{id}")
     public ResponseEntity<ResponseMessage> removeOrderItem(@PathVariable("id") Long orderItemId) throws NotFoundException, BadRequestException {
         return orderService.removeOrderItem(orderItemId);
@@ -69,9 +70,15 @@ public class OrderController {
     }
 
     // PROCUREMENT MANAGER ACCESS
+    @Operation(summary = "Get Supplier", description = "Get supplier details on a particular site.")
+    @GetMapping("procurement-manager/get/supplier")
+    public List<GetUserDTO> getSuppliers() throws NotFoundException {
+        return orderService.getSuppliers();
+    }
+
     @Operation(summary = "Assign Supplier to Order", description = "Assign a supplier to fulfill this order by specifying the supplier's ID.")
     @PutMapping("procurement-manager/order/assign/{id}")
-    public ResponseEntity<ResponseMessage> assignSupplier(@PathVariable("id") Long orderId, @RequestBody Long supplierId) throws NotFoundException {
+    public ResponseEntity<ResponseMessage> assignSupplier(@PathVariable("id") Long orderId, @RequestBody Long supplierId) throws NotFoundException, BadRequestException {
         return orderService.assignSupplier(orderId, supplierId);
     }
 
