@@ -106,7 +106,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public ResponseEntity<ResponseMessage> restPassword(String email, String password) throws NotFoundException {
+    public ResponseEntity<ResponseMessage> resetPassword(String email, String password) throws NotFoundException {
         Optional<User> userCondition = userRepository.findByEmail(email);
 
         // INVALID USER EXCEPTION

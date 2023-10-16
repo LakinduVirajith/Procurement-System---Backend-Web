@@ -52,8 +52,8 @@ public class UserController {
 
     @Operation(summary = "Reset Password", description = "Initiate password reset by Providing necessary details.")
     @PostMapping("super-admin/reset-password")
-    public ResponseEntity<ResponseMessage> restPassword(String email, @RequestBody String password) throws NotFoundException {
-        return userService.restPassword(email, password);
+    public ResponseEntity<ResponseMessage> resetPassword(String email, @RequestBody String password) throws NotFoundException {
+        return userService.resetPassword(email, password);
     }
 
     // GLOBAL ACCESS

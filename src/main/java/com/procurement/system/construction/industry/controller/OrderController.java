@@ -45,7 +45,7 @@ public class OrderController {
         return orderService.addOrderItem(orderItemDTO);
     }
 
-    @Operation(summary = "Add an Item from Order", description = "Remove an item from an order using orderItemId.")
+    @Operation(summary = "Remove an Item from Order", description = "Remove an item from an order using orderItemId.")
     @DeleteMapping("site-manager/order/delete/item/{id}")
     public ResponseEntity<ResponseMessage> removeOrderItem(@PathVariable("id") Long orderItemId) throws NotFoundException, BadRequestException {
         return orderService.removeOrderItem(orderItemId);

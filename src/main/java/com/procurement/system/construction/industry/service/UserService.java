@@ -21,7 +21,7 @@ public interface UserService {
 
     ResponseEntity<ResponseMessage> deactivate(Long userId) throws NotFoundException, ConflictException;
 
-    ResponseEntity<ResponseMessage> restPassword(String email, String password) throws NotFoundException;
+    ResponseEntity<ResponseMessage> resetPassword(String email, String password) throws NotFoundException;
 
     ResponseEntity<AuthenticationResponse> authenticate(AuthenticationRequest request) throws NotFoundException, ForbiddenException;
 
