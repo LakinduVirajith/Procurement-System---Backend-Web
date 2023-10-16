@@ -29,11 +29,11 @@ insights gained during its development
 
 ## 2. Class Diagram
 
-<img src="public/diagrams/Class Diagram.png">
+<img src="diagrams/Class Diagram.png">
 
 ## 3. Entity Relationship Diagram (ERD)
 
-<img src="public/diagrams/ER Diagram.png">
+<img src="diagrams/ER Diagram.png">
 
 ## 4. Implementation and Code Structure
 
