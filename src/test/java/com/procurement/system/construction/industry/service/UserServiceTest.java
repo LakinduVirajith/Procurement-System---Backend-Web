@@ -2,7 +2,6 @@ package com.procurement.system.construction.industry.service;
 
 import com.procurement.system.construction.industry.common.AuthenticationRequest;
 import com.procurement.system.construction.industry.common.AuthenticationResponse;
-import com.procurement.system.construction.industry.common.CommonFunctions;
 import com.procurement.system.construction.industry.common.ResponseMessage;
 import com.procurement.system.construction.industry.dto.GetUserDTO;
 import com.procurement.system.construction.industry.dto.UserDTO;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
@@ -383,9 +381,6 @@ class UserServiceTest {
 
     @Test
     public void logout_shouldThrowNotFoundException_whenUserNotFound() throws NotFoundException, BadRequestException {
-        // Given
-        String token = "token";
-
         // When
         when(userRepository.findByEmail(any(String.class))).thenReturn(Optional.empty());
 
@@ -395,8 +390,6 @@ class UserServiceTest {
 
     @Test
     public void logout_shouldThrowBadRequestException_whenTokenIsInvalid() throws NotFoundException, BadRequestException {
-        String token = "token";
-
         // Then
         assertThat(userServiceImpl.logout()).isNotExactlyInstanceOf(BadRequestException.class);
     }
