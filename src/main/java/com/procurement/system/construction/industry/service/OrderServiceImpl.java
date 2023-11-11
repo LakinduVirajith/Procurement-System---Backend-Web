@@ -87,7 +87,7 @@ public class OrderServiceImpl implements OrderService{
     }
 
     private boolean isOrderStatusValidForSupplier(Status status) {
-        return status == Status.Approved || status == Status.Returned;
+        return status == Status.Approved || status == Status.Delivered ||status == Status.Returned;
     }
 
     private List<OrderItemDTO> GetOrderItemsData(OrderDetails order) {
